@@ -26,5 +26,6 @@ data class HistorialCambio(
     val dni: String?,
     val nombre: String?,
     val apellido: String?,
-    val fecha: LocalDateTime?
+    val fecha: LocalDateTime?,
+    val motivoConsulta: String?
 )

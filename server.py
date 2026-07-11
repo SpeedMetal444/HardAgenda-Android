@@ -204,10 +204,22 @@ def historial(cfg: dict = Depends(db_headers)):
         conn = connect_db(cfg)
         cur = conn.cursor()
         cur.execute("""
-            SELECT id, tabla, registro_id, accion, detalle, usuario, dni, nombre, apellido, fecha
-            FROM historial_cambios ORDER BY fecha DESC LIMIT 200
+            SELECT h.id, h.tabla, h.registro_id, h.accion, h.detalle, h.usuario, h.dni, h.nombre, h.apellido, h.fecha,
+                   t.motivo_consulta
+            FROM historial_cambios h
+            LEFT JOIN turnos t ON h.tabla = 'turnos' AND h.registro_id = t.id
+            ORDER BY h.fecha DESC LIMIT 200
         """)
-        rows = rows_to_list(cur, cur.fetchall())
+        rows = []
+        cols = [d[0] for d in cur.description]
+        for row in cur.fetchall():
+            d = {}
+            for i, col in enumerate(cols):
+                val = row[i]
+                if isinstance(val, (date, datetime)):
+                    val = val.isoformat()
+                d[col] = val
+            rows.append(d)
         cur.close()
         conn.close()
         return {"status": "ok", "data": rows}

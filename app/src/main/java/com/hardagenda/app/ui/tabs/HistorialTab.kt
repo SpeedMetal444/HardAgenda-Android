@@ -67,7 +67,7 @@ fun HistorialTab() {
                     ) {
                         HeaderCell("Fecha", Modifier.weight(1.2f))
                         HeaderCell("Accion", Modifier.weight(1f))
-                        HeaderCell("Detalle", Modifier.weight(1.5f))
+                        HeaderCell("Consulta", Modifier.weight(1.5f))
                         HeaderCell("DNI", Modifier.weight(0.8f))
                         HeaderCell("Nombre", Modifier.weight(1.2f))
                         HeaderCell("Usuario", Modifier.weight(1f))
@@ -87,7 +87,7 @@ fun HistorialTab() {
                     ) {
                         DataCellSmall(fechaStr, Modifier.weight(1.2f))
                         DataCellSmall(r.accion, Modifier.weight(1f))
-                        DataCellSmall(r.detalle ?: "", Modifier.weight(1.5f))
+                        DataCellSmall(r.motivoConsulta ?: "", Modifier.weight(1.5f))
                         DataCellSmall(r.dni ?: "", Modifier.weight(0.8f))
                         DataCellSmall(nombreCompleto, Modifier.weight(1.2f))
                         DataCellSmall(r.usuario ?: "", Modifier.weight(1f))

@@ -34,7 +34,8 @@ object TurnoRepository {
             dni = m["dni"] as? String,
             nombre = m["nombre"] as? String,
             apellido = m["apellido"] as? String,
-            fecha = parseDateTime(m["fecha"] as? String)
+            fecha = parseDateTime(m["fecha"] as? String),
+            motivoConsulta = m["motivo_consulta"] as? String
         )
     }
 
