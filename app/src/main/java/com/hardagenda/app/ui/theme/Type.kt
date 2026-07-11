@@ -12,61 +12,61 @@ val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = OpenSans,
         fontWeight = FontWeight.Bold,
-        fontSize = 28.sp,
-        lineHeight = 36.sp
+        fontSize = 32.sp,
+        lineHeight = 40.sp
     ),
     headlineLarge = TextStyle(
+        fontFamily = OpenSans,
+        fontWeight = FontWeight.Bold,
+        fontSize = 26.sp,
+        lineHeight = 32.sp
+    ),
+    headlineMedium = TextStyle(
         fontFamily = OpenSans,
         fontWeight = FontWeight.Bold,
         fontSize = 22.sp,
         lineHeight = 28.sp
     ),
-    headlineMedium = TextStyle(
-        fontFamily = OpenSans,
-        fontWeight = FontWeight.Bold,
-        fontSize = 18.sp,
-        lineHeight = 24.sp
-    ),
     titleLarge = TextStyle(
         fontFamily = OpenSans,
         fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        lineHeight = 22.sp
+        fontSize = 20.sp,
+        lineHeight = 26.sp
     ),
     titleMedium = TextStyle(
         fontFamily = OpenSans,
         fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp
+        fontSize = 17.sp,
+        lineHeight = 23.sp
     ),
     bodyLarge = TextStyle(
         fontFamily = OpenSans,
         fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp
+        fontSize = 16.sp,
+        lineHeight = 22.sp
     ),
     bodyMedium = TextStyle(
+        fontFamily = OpenSans,
+        fontWeight = FontWeight.Normal,
+        fontSize = 15.sp,
+        lineHeight = 21.sp
+    ),
+    bodySmall = TextStyle(
         fontFamily = OpenSans,
         fontWeight = FontWeight.Normal,
         fontSize = 13.sp,
         lineHeight = 18.sp
     ),
-    bodySmall = TextStyle(
-        fontFamily = OpenSans,
-        fontWeight = FontWeight.Normal,
-        fontSize = 11.sp,
-        lineHeight = 16.sp
-    ),
     labelLarge = TextStyle(
         fontFamily = OpenSans,
         fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp
+        fontSize = 16.sp,
+        lineHeight = 22.sp
     ),
     labelSmall = TextStyle(
         fontFamily = OpenSans,
         fontWeight = FontWeight.Normal,
-        fontSize = 10.sp,
-        lineHeight = 14.sp
+        fontSize = 12.sp,
+        lineHeight = 16.sp
     )
 )

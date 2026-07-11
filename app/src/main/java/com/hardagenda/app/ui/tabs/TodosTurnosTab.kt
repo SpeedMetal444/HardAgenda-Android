@@ -28,6 +28,7 @@ import com.hardagenda.app.util.PrefsManager
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -368,8 +369,8 @@ private fun EditarTurnoDialog(
     var motivo by remember { mutableStateOf(turno.motivoConsulta ?: "") }
     var selectedDate by remember { mutableStateOf(turno.fecha ?: LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
-    var hour by remember { mutableIntStateOf(turno.hora?.hour ?: 9) }
-    var minute by remember { mutableIntStateOf(turno.hora?.minute ?: 0) }
+    var selectedTime by remember { mutableStateOf(turno.hora?.toLocalTime() ?: LocalTime.of(9, 0)) }
+    var showTimePicker by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     if (errorMessage != null) {
@@ -397,18 +398,8 @@ private fun EditarTurnoDialog(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text("Hora:", style = MaterialTheme.typography.bodyMedium)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(
-                        value = hour.toString().padStart(2, '0'),
-                        onValueChange = { h -> h.toIntOrNull()?.let { if (it in 0..23) hour = it } },
-                        modifier = Modifier.width(60.dp), singleLine = true
-                    )
-                    Text(" : ", fontWeight = FontWeight.Bold)
-                    OutlinedTextField(
-                        value = minute.toString().padStart(2, '0'),
-                        onValueChange = { m -> m.toIntOrNull()?.let { if (it in 0..59) minute = it } },
-                        modifier = Modifier.width(60.dp), singleLine = true
-                    )
+                OutlinedButton(onClick = { showTimePicker = true }) {
+                    Text(selectedTime.format(DateTimeFormatter.ofPattern("HH:mm")))
                 }
             }
         },
@@ -419,7 +410,7 @@ private fun EditarTurnoDialog(
                     return@TextButton
                 }
                 scope.launch {
-                    val fechaHora = LocalDateTime.of(selectedDate, java.time.LocalTime.of(hour, minute))
+                    val fechaHora = LocalDateTime.of(selectedDate, selectedTime)
                     val result = TurnoRepository.editarTurno(
                         turno.id, nombre.trim(), apellido.trim(), dni.trim(),
                         obraSocial.trim().ifBlank { null },
@@ -464,6 +455,30 @@ private fun EditarTurnoDialog(
                 TextButton(onClick = { showDatePicker = false }) { Text("Cancelar", color = GrayText) }
             }
         ) { DatePicker(state = datePickerState) }
+    }
+
+    if (showTimePicker) {
+        val timePickerState = rememberTimePickerState(
+            initialHour = selectedTime.hour,
+            initialMinute = selectedTime.minute,
+            is24Hour = true
+        )
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            title = { Text("Hora del turno") },
+            text = { TimePicker(state = timePickerState) },
+            confirmButton = {
+                TextButton(onClick = {
+                    selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                    showTimePicker = false
+                }) { Text("OK", color = GreenDark) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Cancelar", color = GrayText)
+                }
+            }
+        )
     }
 }
 

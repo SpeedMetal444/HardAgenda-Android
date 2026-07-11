@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hardagenda.app.data.model.Turno
 import com.hardagenda.app.ui.theme.*
@@ -71,10 +72,20 @@ fun TurnoCard(
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "DNI: ${turno.dni}${turno.obraSocial?.let { "  |  Obra Social: $it" } ?: ""}",
+                    text = "DNI: ${turno.dni}${turno.obraSocial?.let { "  |  OS: $it" } ?: ""}",
                     style = MaterialTheme.typography.bodySmall,
                     color = if (isActual) GreenDark.copy(alpha = 0.7f) else GrayText
                 )
+                turno.motivoConsulta?.takeIf { it.isNotBlank() }?.let { motivo ->
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = motivo,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        color = if (isActual) GreenDark.copy(alpha = 0.5f) else GrayText
+                    )
+                }
             }
 
             turno.hora?.let { h ->
@@ -118,6 +129,16 @@ fun TurnoAtendidoCard(turno: Turno) {
                     style = MaterialTheme.typography.bodySmall,
                     color = GrayLight
                 )
+                turno.motivoConsulta?.takeIf { it.isNotBlank() }?.let { motivo ->
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = motivo,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        color = GrayLight
+                    )
+                }
             }
             turno.hora?.let { h ->
                 Text(

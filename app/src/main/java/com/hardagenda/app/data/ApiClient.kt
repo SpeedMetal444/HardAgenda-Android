@@ -16,6 +16,13 @@ object ApiClient {
     var dbPass: String = ""
     var dbName: String = "hardagenda_db"
 
+    fun configure(ip: String, port: String, user: String, pass: String, db: String) {
+        serverUrl = "http://${ip.trim()}:${port.trim()}"
+        dbUser = user.trim()
+        dbPass = pass
+        dbName = db.trim()
+    }
+
     private fun url(path: String): URL {
         val base = serverUrl.trimEnd('/')
         return URL("$base$path")
@@ -52,7 +59,7 @@ object ApiClient {
             if (conn.responseCode in 200..299) {
                 Result.success(json)
             } else {
-                Result.failure(Exception(json.optString("message", "Error HTTP ${conn.responseCode}")))
+                Result.failure(Exception(json.optString("detail", json.optString("message", "Error HTTP ${conn.responseCode}"))))
             }
         } catch (e: Exception) {
             when {
@@ -71,8 +78,12 @@ object ApiClient {
         request("GET", "/api/ping").map { true }
     }
 
-    suspend fun testConnection(): Result<String> = withContext(Dispatchers.IO) {
-        request("GET", "/api/test").map { it.optString("message", "OK") }
+    suspend fun testConnection(dbName: String? = null): Result<String> = withContext(Dispatchers.IO) {
+        val prevDb = this@ApiClient.dbName
+        if (dbName != null) this@ApiClient.dbName = dbName
+        val result = request("GET", "/api/test").map { it.optString("message", "OK") }
+        if (dbName != null) this@ApiClient.dbName = prevDb
+        result
     }
 
     suspend fun crearBaseDeDatos(): Result<String> = withContext(Dispatchers.IO) {

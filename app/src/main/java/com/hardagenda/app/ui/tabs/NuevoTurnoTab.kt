@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -33,9 +34,9 @@ fun NuevoTurnoTab() {
     var obraSocial by remember { mutableStateOf("") }
     var motivo by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedTime by remember { mutableStateOf(LocalTime.now().withSecond(0).withNano(0)) }
     var showDatePicker by remember { mutableStateOf(false) }
-    var hour by remember { mutableIntStateOf(LocalTime.now().hour) }
-    var minute by remember { mutableIntStateOf(LocalTime.now().minute) }
+    var showTimePicker by remember { mutableStateOf(false) }
 
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var infoMessage by remember { mutableStateOf<String?>(null) }
@@ -52,8 +53,7 @@ fun NuevoTurnoTab() {
             obraSocial = ""
             motivo = ""
             selectedDate = LocalDate.now()
-            hour = LocalTime.now().hour
-            minute = LocalTime.now().minute
+            selectedTime = LocalTime.now().withSecond(0).withNano(0)
         }
     }
 
@@ -71,30 +71,19 @@ fun NuevoTurnoTab() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text("Fecha del turno:", style = MaterialTheme.typography.bodyMedium)
+        Text("Fecha y hora del turno:", style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.height(4.dp))
-        OutlinedButton(onClick = { showDatePicker = true }) {
-            Text(selectedDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text("Hora del turno:", style = MaterialTheme.typography.bodyMedium)
-        Spacer(modifier = Modifier.height(4.dp))
-        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-            OutlinedTextField(
-                value = hour.toString().padStart(2, '0'),
-                onValueChange = { h -> h.toIntOrNull()?.let { if (it in 0..23) hour = it } },
-                modifier = Modifier.width(60.dp),
-                singleLine = true
-            )
-            Text(" : ", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-            OutlinedTextField(
-                value = minute.toString().padStart(2, '0'),
-                onValueChange = { m -> m.toIntOrNull()?.let { if (it in 0..59) minute = it } },
-                modifier = Modifier.width(60.dp),
-                singleLine = true
-            )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedButton(onClick = { showDatePicker = true }) {
+                Text(selectedDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            OutlinedButton(onClick = { showTimePicker = true }) {
+                Text(selectedTime.format(DateTimeFormatter.ofPattern("HH:mm")))
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -106,7 +95,7 @@ fun NuevoTurnoTab() {
                     return@Button
                 }
                 scope.launch {
-                    val fechaHora = LocalDateTime.of(selectedDate, LocalTime.of(hour, minute))
+                    val fechaHora = LocalDateTime.of(selectedDate, selectedTime)
                     val usuario = PrefsManager.usuarioActual(context)
                     val result = TurnoRepository.agregarTurno(
                         nombre.trim(), apellido.trim(), dni.trim(),
@@ -156,6 +145,32 @@ fun NuevoTurnoTab() {
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+
+    if (showTimePicker) {
+        val timePickerState = rememberTimePickerState(
+            initialHour = selectedTime.hour,
+            initialMinute = selectedTime.minute,
+            is24Hour = true
+        )
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            title = { Text("Hora del turno") },
+            text = {
+                TimePicker(state = timePickerState)
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                    showTimePicker = false
+                }) { Text("OK", color = GreenDark) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Cancelar", color = GrayText)
+                }
+            }
+        )
     }
 }
 

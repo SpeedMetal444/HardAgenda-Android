@@ -8,6 +8,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.hardagenda.app.data.ApiClient
 import com.hardagenda.app.ui.login.LoginScreen
 import com.hardagenda.app.ui.tabs.*
 import com.hardagenda.app.ui.theme.GreenDark
@@ -26,8 +30,13 @@ sealed class Screen(val title: String, val icon: ImageVector) {
 @Composable
 fun HardAgendaApp() {
     val context = LocalContext.current
-    var isLoggedIn by remember { mutableStateOf(false) }
+    var isLoggedIn by remember { mutableStateOf(PrefsManager.hasSavedConfig(context)) }
     var currentScreen by remember { mutableIntStateOf(0) }
+
+    if (isLoggedIn && !ApiClient.serverUrl.startsWith("http")) {
+        val cfg = PrefsManager.loadConfig(context)
+        ApiClient.configure(cfg.ip, cfg.port, cfg.dbUser, cfg.dbPass, cfg.dbName)
+    }
 
     val screens = listOf(Screen.Hoy, Screen.NuevoTurno, Screen.TodosTurnos, Screen.Historial, Screen.AcercaDe)
 
@@ -74,7 +83,10 @@ fun HardAgendaApp() {
                             label = {
                                 Text(
                                     screen.title,
-                                    style = MaterialTheme.typography.bodySmall
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.Center
                                 )
                             },
                             selected = currentScreen == index,

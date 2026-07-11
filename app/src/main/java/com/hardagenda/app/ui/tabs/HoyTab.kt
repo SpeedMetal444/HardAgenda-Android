@@ -22,6 +22,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -205,9 +206,9 @@ private fun ReprogramarDialog(
     onConfirm: (LocalDate, LocalDateTime) -> Unit
 ) {
     var selectedDate by remember { mutableStateOf(LocalDate.now().plusDays(1)) }
+    var selectedTime by remember { mutableStateOf(LocalTime.of(9, 0)) }
     var showDatePicker by remember { mutableStateOf(false) }
-    var hour by remember { mutableIntStateOf(9) }
-    var minute by remember { mutableIntStateOf(0) }
+    var showTimePicker by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -230,30 +231,14 @@ private fun ReprogramarDialog(
 
                 Text("Nueva hora:", style = MaterialTheme.typography.bodyMedium)
                 Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(
-                        value = hour.toString().padStart(2, '0'),
-                        onValueChange = { h ->
-                            h.toIntOrNull()?.let { if (it in 0..23) hour = it }
-                        },
-                        modifier = Modifier.width(60.dp),
-                        singleLine = true
-                    )
-                    Text(" : ", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                    OutlinedTextField(
-                        value = minute.toString().padStart(2, '0'),
-                        onValueChange = { m ->
-                            m.toIntOrNull()?.let { if (it in 0..59) minute = it }
-                        },
-                        modifier = Modifier.width(60.dp),
-                        singleLine = true
-                    )
+                OutlinedButton(onClick = { showTimePicker = true }) {
+                    Text(selectedTime.format(DateTimeFormatter.ofPattern("HH:mm")))
                 }
             }
         },
         confirmButton = {
             TextButton(onClick = {
-                val hora = LocalDateTime.of(selectedDate, java.time.LocalTime.of(hour, minute))
+                val hora = LocalDateTime.of(selectedDate, selectedTime)
                 onConfirm(selectedDate, hora)
             }) {
                 Text("Reprogramar", color = GreenDark)
@@ -290,5 +275,29 @@ private fun ReprogramarDialog(
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+
+    if (showTimePicker) {
+        val timePickerState = rememberTimePickerState(
+            initialHour = selectedTime.hour,
+            initialMinute = selectedTime.minute,
+            is24Hour = true
+        )
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            title = { Text("Nueva hora") },
+            text = { TimePicker(state = timePickerState) },
+            confirmButton = {
+                TextButton(onClick = {
+                    selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                    showTimePicker = false
+                }) { Text("OK", color = GreenDark) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Cancelar", color = GrayText)
+                }
+            }
+        )
     }
 }
