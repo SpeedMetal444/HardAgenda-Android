@@ -96,7 +96,12 @@ def test_connection(cfg: dict = Depends(db_headers)):
         conn.close()
         return {"status": "ok", "message": "Conexion exitosa"}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=safe_str(e))
+        msg = safe_str(e)
+        if "does not exist" in msg or "no existe" in msg or "Invalid" in msg:
+            raise HTTPException(status_code=400, detail="La base de datos no existe. Crea la base de datos primero.")
+        if "fehler" in msg.lower() or "error" in msg.lower():
+            raise HTTPException(status_code=400, detail="No se pudo conectar a la base de datos. Verifica usuario, contraseña y que la base exista.")
+        raise HTTPException(status_code=400, detail=msg)
 
 
 @app.get("/api/crear_db")

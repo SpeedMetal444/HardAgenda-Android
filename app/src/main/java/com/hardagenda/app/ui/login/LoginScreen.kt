@@ -10,7 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hardagenda.app.data.ApiClient
 import com.hardagenda.app.data.TurnoRepository
@@ -26,12 +25,12 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var serverUrl by remember { mutableStateOf("") }
+    var serverIp by remember { mutableStateOf("") }
+    var serverPort by remember { mutableStateOf("8080") }
     var dbName by remember { mutableStateOf("hardagenda_db") }
     var dbUser by remember { mutableStateOf("postgres") }
     var dbPass by remember { mutableStateOf("") }
     var createDb by remember { mutableStateOf(false) }
-    var createTables by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
 
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -40,7 +39,8 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
     LaunchedEffect(Unit) {
         if (PrefsManager.hasSavedConfig(context)) {
             val cfg = PrefsManager.loadConfig(context)
-            serverUrl = cfg.serverUrl
+            serverIp = cfg.ip
+            serverPort = cfg.port
             dbName = cfg.dbName
             dbUser = cfg.dbUser
             dbPass = cfg.dbPass
@@ -77,21 +77,29 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text("URL del servidor:", style = MaterialTheme.typography.bodyMedium)
+        Text("IP del servidor:", style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
-            value = serverUrl,
-            onValueChange = { serverUrl = it },
+            value = serverIp,
+            onValueChange = { serverIp = it },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            placeholder = { Text("http://192.168.0.82:8080") }
+            placeholder = { Text("192.168.0.82") }
         )
-        Text(
-            text = "Ejecuta server.py en tu PC y pone la IP de la PC",
-            style = MaterialTheme.typography.labelSmall,
-            color = GrayText,
-            modifier = Modifier.padding(start = 4.dp, top = 2.dp, bottom = 8.dp)
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text("Puerto:", style = MaterialTheme.typography.bodyMedium)
+        Spacer(modifier = Modifier.height(4.dp))
+        OutlinedTextField(
+            value = serverPort,
+            onValueChange = { serverPort = it },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            placeholder = { Text("8080") }
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text("Nombre de la base de datos:", style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.height(4.dp))
@@ -131,7 +139,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
         Spacer(modifier = Modifier.height(12.dp))
 
         CheckboxRow("Crear base de datos", createDb) { createDb = it }
-        CheckboxRow("Crear tabla", createTables) { createTables = it }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -140,19 +147,16 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                 scope.launch {
                     try {
                         isLoading = true
-                        val url = serverUrl.trim()
-                        if (url.isBlank()) {
-                            errorMessage = "Ingresa la URL del servidor"
+                        val ip = serverIp.trim()
+                        if (ip.isBlank()) {
+                            errorMessage = "Ingresa la IP del servidor"
                             isLoading = false
                             return@launch
                         }
 
-                        ApiClient.serverUrl = url
-                        ApiClient.dbUser = dbUser.trim()
-                        ApiClient.dbPass = dbPass
-                        ApiClient.dbName = dbName.trim()
+                        ApiClient.configure(ip, serverPort, dbUser, dbPass, dbName)
 
-                        val testResult = ApiClient.testConnection()
+                        val testResult = ApiClient.testConnection(dbName = "postgres")
                         if (testResult.isFailure) {
                             errorMessage = testResult.exceptionOrNull()?.message ?: "No se pudo conectar al servidor"
                             isLoading = false
@@ -165,13 +169,17 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                             result.onFailure { errorMessage = it.message; isLoading = false; return@launch }
                         }
 
-                        if (createTables) {
-                            val result = TurnoRepository.crearTablas()
-                            result.onSuccess { infoMessage = it }
-                            result.onFailure { errorMessage = it.message; isLoading = false; return@launch }
+                        val connectResult = ApiClient.testConnection()
+                        if (connectResult.isFailure) {
+                            errorMessage = "No se pudo conectar a la base de datos '${dbName}'. Verifica que exista o marca 'Crear base de datos'."
+                            isLoading = false
+                            return@launch
                         }
 
-                        PrefsManager.saveConfig(context, url, dbName.trim(), dbUser.trim(), dbPass)
+                        val tablasResult = TurnoRepository.crearTablas()
+                        tablasResult.onFailure { errorMessage = it.message; isLoading = false; return@launch }
+
+                        PrefsManager.saveConfig(context, ip, serverPort, dbName.trim(), dbUser.trim(), dbPass)
                         isLoading = false
                         onLoginSuccess()
                     } catch (e: Exception) {
@@ -183,7 +191,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
-            enabled = !isLoading && serverUrl.isNotBlank(),
+            enabled = !isLoading && serverIp.isNotBlank() && dbUser.isNotBlank(),
             colors = ButtonDefaults.buttonColors(containerColor = GreenDark)
         ) {
             if (isLoading) {
